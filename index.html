@@ -1,0 +1,317 @@
+<html>
+	<head>
+		<style>
+			body{margin:0;overflow:hidden;font:15px arial}
+			canvas{background-color:lightgrey}
+			button{margin:10px 15px;padding:5px 15px;background-color:green;outline:none;color:white;border-radius:6px}
+			button[reset]{background-color: darkred}
+			section{display:block}
+			div{position:absolute;width:18px;height:18px;background-color:blue;top:1px;left:1px;border-radius:50%;transition:all .5s}
+			div[b]{background-color:red}
+			p{padding-left:20px;width:500px;box-sizing:border-box}
+		</style>
+		<script>
+			/*
+			MIT License
+
+			Copyright (c) 2019 Ayhan Dorman
+
+			Permission is hereby granted, free of charge, to any person obtaining a copy
+			of this software and associated documentation files (the "Software"), to deal
+			in the Software without restriction, including without limitation the rights
+			to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+			copies of the Software, and to permit persons to whom the Software is
+			furnished to do so, subject to the following conditions:
+
+			The above copyright notice and this permission notice shall be included in all
+			copies or substantial portions of the Software.
+
+			THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+			IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+			FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+			AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+			LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+			OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+			SOFTWARE.
+			*/
+
+			var canvasSize = 600;
+			var tileWidth = 20;
+			var drawPaths = false;
+			var drawFinalPath = true;
+			var drawGrid = true;
+			var eightDirections = false;
+
+			window.onload = () => {
+				var currentButton = 3;
+				var canvas = document.querySelector("canvas");
+				canvas.width = canvasSize;
+				canvas.height = canvasSize;
+				var btnFind = document.querySelector("[find]");
+				var btnReset = document.querySelector("[reset]");
+				var mouse;
+				var context = canvas.getContext("2d");
+				var tileSize = parseInt(canvasSize / tileWidth);
+				var tiles = Array(tileSize);
+				var player = {
+					x: 0,
+				  y: 0
+				}
+				var destination = {
+					x: 0,
+				  y: 0
+				}
+				var progressing = false;
+
+				setListeners();
+				drawTiles();
+
+				// <draw tiles>
+				function drawTiles() {
+					context.strokeStyle = '#888';
+				  context.beginPath();
+				  for (let i = 0; i <= tileSize; i++) {
+					tiles[i] = new Array(tileSize);
+					for (let j = 0; j <= tileSize; j++) {
+						tiles[i][j] = {
+						type: 0,
+						direction: 0
+					  };
+					}
+					if (drawGrid) {
+					  context.moveTo(tileWidth * i, 0);
+					  context.lineTo(tileWidth * i, canvasSize);
+					  context.moveTo(0, tileWidth * i);
+					  context.lineTo(canvasSize, tileWidth * i);
+					}
+				  }
+				  context.stroke();
+				}
+				// </draw tiles>
+
+				// <reset directions>
+				function resetDirections() {
+				  for (let i = 0; i <= tileSize; i++) {
+					  for (let j = 0; j <= tileSize; j++) {
+						tiles[i][j].direction = 0;
+					  }
+					}
+				}
+				// </reset directions>
+
+				function markDirections(x, y) {
+				  // 1  2  3
+				  //-4     4
+				  //-3 -2 -1
+				  let found = false;
+				  if (drawPaths) context.beginPath();
+					if (x > 0 && tiles[x - 1][y].type != 1 && tiles[x - 1][y].direction == 0) {
+					tiles[x - 1][y].direction = -4;
+					if (drawPaths) {
+					  context.moveTo(x * tileWidth + tileWidth / 2, y * tileWidth + tileWidth / 2);
+					  context.lineTo((x - 1) * tileWidth + tileWidth / 2, y * tileWidth + tileWidth / 2);
+					}
+					if (x - 1 == destination.x && y == destination.y) found = true;
+					progressing = true;
+				  }
+				  if (eightDirections && x > 0 && y > 0 && tiles[x - 1][y - 1].type != 1 && tiles[x - 1][y - 1].direction == 0) {
+					tiles[x - 1][y - 1].direction = 1;
+					if (drawPaths) {
+					  context.moveTo(x * tileWidth + tileWidth / 2, y * tileWidth + tileWidth / 2);
+					  context.lineTo((x - 1) * tileWidth + tileWidth / 2, (y - 1) * tileWidth + tileWidth / 2);
+					}
+					if (x - 1 == destination.x && y - 1 == destination.y) found = true;
+					progressing = true;
+				  }
+				  if (y > 0 && tiles[x][y - 1].type != 1 && tiles[x][y - 1].direction == 0) {
+					tiles[x][y - 1].direction = 2;
+					if (drawPaths) {
+					  context.moveTo(x * tileWidth + tileWidth / 2, y * tileWidth + tileWidth / 2);
+					  context.lineTo(x * tileWidth + tileWidth / 2, (y - 1) * tileWidth + tileWidth / 2);
+					}
+					if (x == destination.x && y - 1 == destination.y) found = true;
+					progressing = true;
+				  }
+				  if (eightDirections && x < tileSize, y > 0 && tiles[x + 1][y - 1].type != 1 && tiles[x + 1][y - 1].direction == 0) {
+					tiles[x + 1][y - 1].direction = 3;
+						if (drawPaths) {
+					  context.moveTo(x * tileWidth + tileWidth / 2, y * tileWidth + tileWidth / 2);
+					  context.lineTo((x + 1) * tileWidth + tileWidth / 2, (y - 1) * tileWidth + tileWidth / 2);
+					}
+					if (x + 1 == destination.x && y - 1 == destination.y) found = true;
+					progressing = true;
+				  }
+				  if (x < tileSize && tiles[x + 1][y].type != 1 && tiles[x + 1][y].direction == 0) {
+					tiles[x + 1][y].direction = 4;
+					if (drawPaths) {
+					  context.moveTo(x * tileWidth + tileWidth / 2, y * tileWidth + tileWidth / 2);
+					  context.lineTo((x + 1) * tileWidth + tileWidth / 2, y * tileWidth + tileWidth / 2);
+					}
+					if (x + 1 == destination.x && y == destination.y) found = true;
+					progressing = true;
+				  }
+				  if (eightDirections && x < tileSize && y < tileSize && tiles[x + 1][y + 1].type != 1 && tiles[x + 1][y + 1].direction == 0) {
+					tiles[x + 1][y + 1].direction = -1;
+					if (drawPaths) {
+					  context.moveTo(x * tileWidth + tileWidth / 2, y * tileWidth + tileWidth / 2);
+					  context.lineTo((x + 1) * tileWidth + tileWidth / 2, (y + 1) * tileWidth + tileWidth / 2);
+					}
+					if (x + 1 == destination.x && y + 1 == destination.y) found = true;
+					progressing = true;
+				  }
+				  if (y < tileSize && tiles[x][y + 1].type != 1 && tiles[x][y + 1].direction == 0) {
+					tiles[x][y + 1].direction = -2;
+					if (drawPaths) {
+					  context.moveTo(x * tileWidth + tileWidth / 2, y * tileWidth + tileWidth / 2);
+					  context.lineTo(x * tileWidth + tileWidth / 2, (y + 1) * tileWidth + tileWidth / 2);
+					}
+					if (x == destination.x && y + 1 == destination.y) found = true;
+					progressing = true;
+				  }
+				  if (eightDirections && x > 0 && y < tileSize && tiles[x - 1][y + 1].type != 1 && tiles[x - 1][y + 1].direction == 0) {
+					tiles[x - 1][y + 1].direction = -3;
+					if (drawPaths) {
+					  context.moveTo(x * tileWidth + tileWidth / 2, y * tileWidth + tileWidth / 2);
+					  context.lineTo((x - 1) * tileWidth + tileWidth / 2, (y + 1) * tileWidth + tileWidth / 2);
+					}
+					if (x - 1 == destination.x && y + 1 == destination.y) found = true;
+					progressing = true;
+				  }
+				  if (drawPaths) context.stroke();
+				  return found;
+				}
+
+				// <set listeners>
+				function setListeners() {
+					document.oncontextmenu = (e) => {
+					e.preventDefault();
+				  }
+				  
+				  btnReset.onclick = () => {
+					context.clearRect(0, 0, canvas.width, canvas.height);
+					drawTiles();
+					found = false;
+				  }
+				  
+				  btnFind.onclick = (e) => {
+					resetDirections();
+					var found = false;
+					var initialSearch = false;
+					progressing = true;
+					context.strokeStyle = '#f49241';
+					
+					while (!found && progressing) {
+						if (!initialSearch) {
+						found = markDirections(player.x, player.y);
+						initialSearch = true;
+					  } else {
+						progressing = false;
+						for (let i = 0; i < tileSize; i++) {
+						  for (let j = 0; j < tileSize; j++) {
+										if (tiles[i][j].direction != 0) {
+								found = markDirections(i, j);
+							  if (found) {
+								alert('(✓) Found!');
+								break;
+							  }
+							}            
+						  }
+						  if (found) break;
+						}
+					  }
+					}
+					if (!progressing) {
+						alert('(x) Not found!');
+					}
+					if (found) {
+						let currentLocation = {
+						x: destination.x,
+						y: destination.y
+					  }
+					  var theWay = [];
+					  while (currentLocation.x != player.x || currentLocation.y != player.y) {
+							switch (tiles[currentLocation.x][currentLocation.y].direction) {
+							case -4: ++currentLocation.x; break;
+							case 	1: ++currentLocation.x; ++currentLocation.y; break;
+							case 	2: ++currentLocation.y; break;
+							case 	3: --currentLocation.x; ++currentLocation.y; break;
+							case 	4: --currentLocation.x; break;
+							case -1: --currentLocation.x; --currentLocation.y; break;
+							case -2: --currentLocation.y; break;
+							case -3: ++currentLocation.x; --currentLocation.y; break;          
+						}
+						theWay.push({x: currentLocation.x, y: currentLocation.y});
+					  }
+					  theWay = theWay.reverse();
+					  var playerEntity = document.querySelector('[a]');
+					  context.strokeStyle = 'red';
+					  context.beginPath();
+					  for (var k = 0; k < theWay.length; k++) {
+						setTimeout((p) => {        
+							playerEntity.style.left = theWay[p].x * tileWidth + 'px';
+							playerEntity.style.top = theWay[p].y * tileWidth + 'px';
+						}, k * 100, k);
+						if (drawFinalPath && k < theWay.length - 1) {
+						  context.moveTo(theWay[k].x * tileWidth + tileWidth / 2, theWay[k].y * tileWidth + tileWidth / 2);
+						  context.lineTo(theWay[k + 1].x * tileWidth + tileWidth / 2, theWay[k + 1].y * tileWidth + tileWidth / 2);
+						}
+					  }
+					  context.stroke();
+					}
+				  }
+				  
+				  document.onkeydown = (e) => {
+					let x = parseInt(mouse.clientX / tileWidth),
+							y = parseInt(mouse.clientY / tileWidth);
+					
+					if ((e.key == 'a' || e.key == 'b') && tiles[x][y].type === 0) {
+					  let entity = document.querySelector('[' + e.key + ']');
+					  entity.style.left = mouse.clientX - mouse.clientX % tileWidth + 1 + 'px';
+					  entity.style.top = mouse.clientY - mouse.clientY % tileWidth + 1 + 'px';
+					  let p = e.key == 'a' ? player : destination;
+					  p.x = x;
+					  p.y = y;
+					}
+				  }
+
+				  canvas.onmousedown = (e) => {
+					currentButton = e.button;
+				  }
+
+				  canvas.onmouseup = () => {
+					currentButton = 3;
+				  }
+
+				  canvas.onmousemove = (e) => {
+					mouse = e;
+					let x = parseInt(e.clientX / tileWidth),
+							y = parseInt(e.clientY / tileWidth);
+					if (currentButton == 0) {
+						tiles[x][y].type = 1;
+					  context.fillStyle = 'green';
+						context.fillRect(e.clientX - e.clientX % tileWidth + 1, e.clientY - e.clientY % tileWidth + 1, tileWidth - 2, tileWidth - 2);
+					} else if (currentButton == 2) {
+						tiles[x][y].type = 0;
+					  context.fillStyle = 'lightgrey';
+						context.fillRect(e.clientX - e.clientX % tileWidth + 1, e.clientY - e.clientY % tileWidth + 1, tileWidth - 2, tileWidth - 2);
+					}
+				  }
+				}
+				// </set listeners>
+			}
+		</script>
+		<title>Path-Finding</title>
+	</head>
+	<body>
+		<div a></div>
+		<div b></div>
+		<canvas></canvas>
+		<p>
+		Hold A to move the player. Hold B to move the destination. Hold mouse left button to draw block and right button to remove block.
+		</p>
+		<section>
+		<button find>Find</button>
+		<button reset>Reset</button>
+		</section>
+	</body>
+</html>
