@@ -41,6 +41,7 @@
 			var drawFinalPath = true;
 			var drawGrid = true;
 			var eightDirections = false;
+			// Feel free to play with values above
 
 			window.onload = () => {
 				var currentButton = 3;
@@ -232,10 +233,10 @@
 					  while (currentLocation.x != player.x || currentLocation.y != player.y) {
 							switch (tiles[currentLocation.x][currentLocation.y].direction) {
 							case -4: ++currentLocation.x; break;
-							case 	1: ++currentLocation.x; ++currentLocation.y; break;
-							case 	2: ++currentLocation.y; break;
-							case 	3: --currentLocation.x; ++currentLocation.y; break;
-							case 	4: --currentLocation.x; break;
+							case  1: ++currentLocation.x; ++currentLocation.y; break;
+							case  2: ++currentLocation.y; break;
+							case  3: --currentLocation.x; ++currentLocation.y; break;
+							case  4: --currentLocation.x; break;
 							case -1: --currentLocation.x; --currentLocation.y; break;
 							case -2: --currentLocation.y; break;
 							case -3: ++currentLocation.x; --currentLocation.y; break;          
