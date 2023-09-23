@@ -1,6 +1,8 @@
 # Path-Finding
 Travel agency helping to get a player and target together.
 
+![alt Path Finding](https://i.ibb.co/2nXfNrm/path-finding.png)
+
 ## How it works?
 
 1. Hold A key in order to move the player to your current mouse pointer location.
